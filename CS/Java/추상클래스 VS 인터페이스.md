@@ -279,7 +279,7 @@ public E get(int index) {
 }
 ```
 
-**`AbstractList` 내부**
+**`AbstractList` 내부 : List인터페이스를 implments 하고 있다.**
 
 ```java
 public abstract class AbstractList<E> extends AbstractCollection<E> implements List<E> {
