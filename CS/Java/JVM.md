@@ -9,7 +9,7 @@ JVM(Java Virtual Machine)은 Java 프로그램을 실행하기 위한 가상머�
     
 3. 바이트 코드 실행 : Java 컴파일러는 Java 소스 코드를 바이트 코드로 컴파일 함. JVM은 이 바이트 코드를 실행하여 프로그램을 구동. 이러한 중간 단계의 바이트 코드는 플랫폼에 의존하지 않고 실행할 수 있음.
 
-![Alt text](image.png)
+![Alt text](img/image.png)
 
 # Java 프로그램 실행과정?
 
@@ -151,7 +151,9 @@ New area에서 일정 시간 참조되고 있는, 살아남은 객체들이 저�
 
 대부분 Young 영역보다 크게 할당하며, 크기가 큰 만큼 Young 영역보다 GC는 적게 발생한다. 이 영역에서 객체가 사라질 때 Major GC(혹은 Full GC)가 발생한다고 말한다.
 
-**Permanent Generation(perm 영역)**
+### **Permanent Generation(perm 영역)**
+
+(단, Permanent Generation영역은 Java8이후로 제거되고, Metaspace로 대체됨)
 
 생성된 객체들의 정보의 주소 값이 저장된 공간이다. Class loader에 의해 load되는 Class, Method 등에 대한 Meta 정보가 저장되는 영역이고 JVM에 의해 사용된다. 
 
@@ -164,6 +166,57 @@ Reflection을 사용하여 동적으로 클래스가 로딩되는 경우에 사�
 ![Alt text](img/image-4.png)
 
 카드 테이블은 write barrier를 사용하여 관리한다. write barrier는 Minor GC를 빠르게 할 수 있도록 하는 장치이다. write barrirer때문에 약간의 오버헤드는 발생하지만 전반적인 GC 시간은 줄어들게 된다.
+
+### Metaspace
+Java 8이후로 Perm영역이 Metaspace로 대체 되면서, 클래스와 메타데이터에 대한 저장 공간이 Heap 영역이 아닌 Native Memory에 할당된다.
+( Native Memory : 시스템의 기본 메모리 ex. RAM )
+
+### GC 관련 로그
+![img.png](img/image-10.png)
+```jsx
+Full GC [PSYoungGen: 147584K -> 0K(3028480K)] [ParOldGen: 5201379K->5272764K(6882304K)] 5348963K->5272764K(9910784K) [PSPermGen: 102526K->102526K(148992K)], 6.264070 sec
+```
+
+1. **`Full GC (전체 가비지 컬렉션)`**
+    - 이 로그는 전체 가비지 컬렉션(Full GC)이 발생한 것을 의미.
+    - Full GC는 Young 영역과 Old 영역, Perm 영역 등 전체 힙 영역을 대상으로 하는 가비지 컬렉션
+
+2. **`[PSYoungGen: 147584K -> OK(3028480K)]`**
+    - PSYoungGen은 Parallel Scavenge Young Generation을 나타냄.
+    - 이 로그는 Young Generation에 대한 가비지 컬렉션 결과를 의미.
+    - 147584K에서 0K로 Young Generation이 컬렉션 되었음을 의미.
+        - : Young Generation 내의 모든 메모리가 해제됨.
+    - Young Generation의 전체 크기 : 3028480K.
+
+   **( 컬렉션 되었다 == 더이상 사용되지 않는 객체들을 정리하고 메모리에서 해지하는 것 )**
+
+3. **`[ParOldGen: 5201379K->5272764K(6882304K)]`**
+    - ParOldGen은 Parallel Scavenge Old Generation을 나타냄.
+    - 이 로그는 Old Generation에 대한 가비지 컬렉션 결과를 의미.
+    - 5213779K에서 5272764K로 Old Generation이 컬렉션되었음을 의미.
+    - Old Gen 영역의 최대 크기 : 6882304K
+4. **`5348963K->5272764K(9910784K)`**
+    - 전체 힙 영역의 크기에 대한 정보를 의미.
+    - 사용 중인 힙 크기가 5348963K에서 5272764K로 줄어들었음.
+        - 힙이 가질 수 있는 최대 크기는 9910784K**.**
+5. **`[PSPermGen: 102526K->102526K(148992K)]`**
+    - Perm 영역에 대한 가비지 컬렉션 결과를 의미.
+    - 102526K에서 102526K로 Perm 영역이 컬렉션 되었음을 의미.
+    - Perm 영역의 최대 크기 : 148992K
+6. **6.264070 sec:**
+    - 가비지 컬렉션에 소요된 시간.
+        - 6.264070초가 걸렸음을 의미.
+
+
+### 단위
+
+- **K (킬로바이트):** 1 킬로바이트 == 1024 바이트
+- **M (메가바이트):** 1 메가바이트 == 1024 킬로바이트, 즉 1,048,576 바이트
+- **G (기가바이트):** 1 기가바이트 == 1024 메가바이트, 즉 1,073,741,824 바이트
+- 
+
+
+
 
 ### 참고 및 이미지 출처
 
