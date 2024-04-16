@@ -125,3 +125,107 @@ creation: Is there an unresolvable circular reference?
 ```
 
 ### 해결방안2 - 구조변경
+내부 호출이 발생하지 않도록 구조를 변경하는 것이 가장 권장하는 방법.
+
+internal() 을 InternalService 라는 별도의 클래스로 분리처리.
+
+CallServiceV3
+
+```java
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+/**
+ * 구조를 변경(분리)
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class CallServiceV3 {
+
+	private final InternalService internalService;
+
+	public void external() {
+		log.info("call external");
+		internalService.internal(); //외부 메서드 호출
+	}
+	
+}
+
+```
+
+InternalService
+
+```java
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+// internal 분리.
+@Slf4j
+@Component
+public class InternalService {
+
+	public void internal() {
+		log.info("call internal");
+	}
+}
+
+```
+
+CallServiceV3Test
+
+```java
+import hello.aop.internalcall.aop.CallLogAspect;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+@Import(CallLogAspect.class)
+@SpringBootTest
+class CallServiceV3Test {
+	
+		@Autowired
+		CallServiceV3 callServiceV3;
+		
+		@Test
+		void external() {
+			callServiceV3.external();
+	}
+	
+}
+
+```
+
+실행 결과
+
+```java
+CallLogAspect : aop=void hello.aop.internalcall.CallServiceV3.external()
+CallServiceV3 : call external
+CallLogAspect : aop=void hello.aop.internalcall.InternalService.internal()
+InternalService : call interna
+```
+
+<img src="img/image1.png" width="500" height="150" />
+
+위와 같이 따로 분리하는 방법말고도
+
+클라이언트에서 각각 호출하는 방법도 있다.
+
+결국 어떤 방법이 되었든 external()내부에서 internal()을 호출하지 않는 구조로 가는 것이 좋다.
+
+### 추가 내용
+
+AOP는 주로 트랜잭션 적용이나 주요 컴포넌트의 로그 출력 기능에 사용됨.
+
+즉 인터페이스에 메서드가 나올 정도의 규모에 AOP를 적용하는 것이 적당함.
+
+( private 메서드에는 AOP가 적용되지 않는다. )
+
+
+
+
+출처 : https://www.inflearn.com/course/lecture?courseSlug=%EC%8A%A4%ED%94%84%EB%A7%81-%ED%95%B5%EC%8B%AC-%EC%9B%90%EB%A6%AC-%EA%B3%A0%EA%B8%89%ED%8E%B8&unitId=94538&tab=curriculum
+
+
